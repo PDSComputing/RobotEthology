@@ -1,0 +1,345 @@
+// Created Nick Livingston 2017 - Annotated by Michael 1-14-2019
+// PDS version without any use of Servo shields.
+// Meant for use with Uno, or with TinyDuino
+#include "sensors.h"
+#include <Servo.h>
+
+
+Servo left_servo;
+Servo right_servo;  // create servo object to control a servo
+// twelve servo objects can be created on most boards
+
+
+//*************************************************** Function Declarations ***********************************************************//
+//Behavior Primitive Functions
+int check_escape_conditions();
+int check_escape_back_conditions();
+int check_seek_light_conditions();
+int check_seek_dark_conditions();
+int check_avoid_conditions();
+int check_approach_conditions();
+void escape();
+void escape_back();
+void seek_light();
+void seek_dark();
+void avoid();
+void approach();
+void straight_cruise();
+void motor_stop();
+//Motor Control Function
+void drive(float left, float right, float delay_seconds);
+//this is a list of the different actions the robot is programmed to do with code to help it approve whether or not to execute a function.
+//*************************************************** Global Constant Declarations ****************************************************//
+const int FRONT_BUMP = 15;
+const int BACK_BUMP = 14;
+const int LEFT_PHOTO = 1;
+const int RIGHT_PHOTO = 0;
+const int LEFT_IR = 3;//Cannot use ports 4, or 5 because they are dedicated to SDA and SCL, which is used for stack communications.
+const int RIGHT_IR = 2;
+const int LEFT_MOTOR = 6;
+const int RIGHT_MOTOR = 9;
+const int SERVO_MID = 90;
+const int SERVO_RANGE = 90;
+
+//*************************************************** Function Definitions ****************************************************//
+void setup(){
+  Serial.begin(9600);
+  Serial.println("8 channel Servo test!");
+
+  left_servo.attach(LEFT_MOTOR);
+  right_servo.attach(RIGHT_MOTOR);  // attaches the servo on pin RIGHT_MOTOR to the servo object
+
+  pinMode(FRONT_BUMP, INPUT_PULLUP);
+  pinMode(BACK_BUMP, INPUT_PULLUP);
+  pinMode(LEFT_PHOTO, INPUT);
+  pinMode(RIGHT_PHOTO, INPUT);
+  pinMode(LEFT_IR, INPUT);
+  pinMode(RIGHT_IR, INPUT);
+ 
+  //digitalWrite(BACK_BUMP, LOW);
+}
+/******************************************************/
+void loop() 
+{
+  read_analog();
+  if(check_seek_dark_conditions()){
+seek_dark();
+}
+else if(check_avoid_conditions()){
+avoid();
+}
+else{straight_cruise();}
+
+} //will check whether or not to execute the function and loop back after the sensor returns data
+/******************************************************/
+void read_analog(){
+  left_photo_value    = 0;
+  right_photo_value   = 0;
+  left_ir_value       = 0;
+  right_ir_value      = 0;
+  for(int i = 0; i < 10; i++){
+    left_photo_value    += (analogRead(LEFT_PHOTO));
+    right_photo_value   += (analogRead(RIGHT_PHOTO));
+    left_ir_value       += analogRead(LEFT_IR);
+    right_ir_value      += analogRead(RIGHT_IR);
+  }
+  left_photo_value  /= 10;
+  right_photo_value /= 10;
+  //right_photo_value -= photo_offset;
+  left_ir_value     /= 10;
+  right_ir_value    /= 10;
+}//how the robot reads the return data for the sensors
+/******************************************************/
+int check_escape_conditions(){//checks the sensors for data that determines whether or not the escape function will be executed
+  
+  front_bump_value = analogRead(FRONT_BUMP);
+  Serial.print("front bump: ");Serial.println(front_bump_value);
+  if(front_bump_value >= bump_threshold && front_bump_value <= bump_max){
+    return true;
+  }else{
+    return false;
+  }
+}
+//do not know
+/******************************************************/
+int check_escape_back_conditions(){//Also checks sensors for data for the escape back function
+  int bump_threshold = 250;
+  int bump_max = 400;
+  
+  int back_bump_value = digitalRead(BACK_BUMP);//analogRead(BACK_BUMP);
+  Serial.print("back bump: ");Serial.println(back_bump_value);
+  if (back_bump_value == HIGH){
+    return true;
+  }/*
+  if(back_bump_value < bump_threshold){
+    return true;
+  }
+  else if(back_bump_value >= bump_threshold && back_bump_value <= bump_max)
+  {
+    return true;
+  }*/else{
+    return false;
+  }
+}
+//do not know
+/******************************************************/
+int check_seek_light_conditions(){//checks sensors to determine whether or not the seek light function will be executed
+ 
+  
+  //printf("left_photo_raw = %d\nright_photo_raw = %d\n", left_photo_raw, right_photo_raw);
+  Serial.print("check_seek_light_conditions().... ");
+  Serial.print(left_photo_value);
+  Serial.print(" : ");
+  Serial.println(right_photo_value);
+ 
+  
+  if(left_photo_value > photo_max){
+    left_photo_value = photo_max;
+  }
+  if(right_photo_value > photo_max
+    right_photo_value = photo_max;
+  }
+  
+  photo_difference  = left_photo_value - right_photo_value;
+
+  //printf("left_photo = %f\nright_photo = %f\n", left_photo_value, right_photo_value);
+  //printf("photo_difference = %f\n", photo_difference);
+  Serial.print("photo_difference: ");
+  Serial.println(photo_difference);
+  if(fabs(photo_difference) > photo_threshold){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+//more about the classifications about what will or will not execute the function
+/******************************************************/
+int check_seek_dark_conditions(){//check sensors to determine whether or not the seek dark function will be executed
+  int left_photo_value;
+  int right_photo_value;
+  int photo_difference;
+  int photo_threshold = 10;
+  
+  left_photo_value = analogRead(LEFT_PHOTO);
+  right_photo_value = analogRead(RIGHT_PHOTO);
+  photo_difference = left_photo_value - right_photo_value;
+
+  if(abs(photo_difference) > photo_threshold){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+//more about execution evaluations
+/******************************************************/
+int check_avoid_conditions(){//determines whether or not the avoid function will be executed
+  
+  Serial.print("check_avoid_conditions().... ");
+  Serial.print(left_ir_value);
+  Serial.print(" : ");
+  Serial.println(right_ir_value);
+  if(left_ir_value >= 500 || right_ir_value >= 500){
+    return true;
+  }else{
+    return false;
+  }
+}
+//the specefic function and how the sensors return data 
+/******************************************************/
+int check_approach_conditions(){//determines whether or not the approach function will be executed
+  int left_ir_value;
+  int right_ir_value;
+  int approach_threshold = 300;
+  
+  left_ir_value = analogRead(LEFT_IR);
+  right_ir_value = analogRead(RIGHT_IR);
+  
+  if(left_ir_value > approach_threshold || right_ir_value > approach_threshold){
+    return true;
+  }else{
+    return false;
+  }
+}
+//function execution
+/******************************************************/
+void escape(){//execution of the escape function.
+ 
+  Serial.println("EscapeFrontBump()");
+  //Left is 0 to mid range
+  if(front_bump_value >= bump_threshold && front_bump_value <= bump_max/2){
+    drive(-1, -0.5, 1.00);
+    //printf("drive(-0.25, -0.75, 1.5);\n");
+  }
+  //Right is mid range to max
+  else if(front_bump_value > bump_max/2){
+    drive(-0.5, -1, 1.00);
+    //printf("drive(-0.75, -0.25, 1.5);\n");
+  }
+
+}
+//function execution
+/******************************************************/
+void escape_back(){//execution of the escape back function. The robot will move and turn away from an obstacle a sensor has detected. 
+  int bump_threshold = 250;
+  int bump_max = 400;
+  
+  int back_bump_value = digitalRead(BACK_BUMP);//analogRead(BACK_BUMP);
+
+  if (back_bump_value == HIGH){
+    drive(0.25, -0.75, 0.30);
+  }/*
+  if(back_bump_value < bump_threshold){
+    drive(0.25, -0.75, 0.30);
+  }
+  else if(back_bump_value >= bump_threshold && back_bump_value <= bump_max)
+  {
+    drive(-0.75, 0.25, 0.30);
+  }*/
+}
+//function execution and how long the robot will take to move back. The x and y values represent how much the wheels will rotate back and forth.
+/******************************************************/
+void seek_light(){//execution of the seek light function. the robot will approach bright environments. motors and sensors required.
+  float left_servo;
+  float right_servo;
+  Serial.println("seek_light");
+  /*if(fabs(photo_difference) > photo_threshold){
+    right_servo = photo_difference/photo_max;//(float)(photo_max - right_photo_value)/(float)photo_max;
+    left_servo  = -right_servo;//(float)(photo_max - left_photo_value)/(float)photo_max;
+  }*/
+  if(photo_difference > 0){//Left brighter, turn left
+    left_servo = -0.25;
+    right_servo = 0.25;
+  }else{
+    left_servo = 0.25;
+    right_servo = -0.25;
+  }
+
+  //printf("left_servo = %f, right_servo = %f\n", left_servo, right_servo);
+  drive(left_servo, right_servo, 0.20);
+}
+//how to read return values for the light attraction function 
+/******************************************************/
+void seek_dark(){//execution of the seek dark function. the robot will approach darker environments. sensors required.
+  int left_photo_value;
+  int right_photo_value;
+  int photo_difference;
+  float photo_ratio;
+  float left_servo;
+  float right_servo;
+  int photo_threshold = 0;
+  
+  left_photo_value  = analogRead(LEFT_PHOTO);
+  right_photo_value = analogRead(RIGHT_PHOTO);
+  printf("left_photo = %d, right_photo = %d\n", left_photo_value, right_photo_value);
+  photo_difference  = left_photo_value - right_photo_value;
+  photo_ratio       = (float)photo_difference/1023.0;
+
+  if(abs(photo_ratio) > photo_threshold){
+    right_servo = right_photo_value/1023.0;
+    left_servo  = left_photo_value/1023.0;
+  }
+
+  printf("left_servo = %f, right_servo = %f\n", left_servo, right_servo);
+  drive(left_servo, right_servo, 0.25);
+  
+}
+
+/******************************************************/
+void avoid(){//execution of the avoid function. the robot will avoid running into obstacles
+  if(left_ir_value >= 500){
+    drive(0.75, -0.75, 0.20);
+  }
+  
+  else if(right_ir_value >= 500){
+    drive(-0.75, 0.5, 0.20); //values of the rotation of the wheels and the time elapsed for the function
+  }
+}
+
+/******************************************************/
+void approach(){//execution for the approach function. the robot will looks for obstacles to drive towards
+  int left_ir_value;
+  int right_ir_value;
+  int approach_threshold = 300;
+  
+  left_ir_value = analogRead(LEFT_IR);
+  right_ir_value = analogRead(RIGHT_IR);
+  
+  printf("left_ir = %d, right_ir = %d\n", left_ir_value, right_ir_value);
+  
+  if(left_ir_value > approach_threshold){
+    drive(0.25, 0.75, 0.5);
+  }
+  
+  else if(right_ir_value > approach_threshold){
+    drive(0.75, 0.25, 0.5);
+  }
+}
+/******************************************************/
+void straight_cruise(){//execution of the straight cruise function with measurements of the wheel rotations and time elapsed. the robot will move in a straight motion
+  drive(0.50, 0.50, 0.5);
+}
+/******************************************************/
+void arc_cruise(){//execution of the arc cruise function. no sensor values. the robot will move in a cruised motion
+  drive(0.75, 0.5, 0.5);
+}
+/******************************************************/
+void motor_stop(){//execution of the motor stop function. stops all robot function with no sensor values
+  drive(0.0, 0.0, 0.25);
+}
+/******************************************************/
+void drive(float left, float right, float delay_seconds){//the float left represents the rotation fo the left wheel. The float right represents how much teh right wheel is rotating. Float delay seconds represents how long it takes for the rotations for the left and right wheel to happen.
+  
+  int left_speed       = SERVO_MID + (SERVO_RANGE * left);//drive function
+  int right_speed      = SERVO_MID - (SERVO_RANGE * right);
+  delay_seconds *= 1000;
+  /*Serial.print(left_speed);
+  Serial.print(" : ");
+  Serial.println(right_speed);
+ */
+  left_servo.write(left_speed);
+  right_servo.write(right_speed);
+  delay(delay_seconds);
+
+}
