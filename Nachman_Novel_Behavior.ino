@@ -208,13 +208,33 @@ int check_approach_conditions(){
 
 /******************************************************/
 void BehaveLikeNachman () {
-    for(int i = 0; i < 5; i++){
-      Avoid and cruise w/ speed proportional to distance
-    
-     
+    while(N > 0) {
+      N = N + Increment
+      for(int i = 0; i < 5; i++){
+        Avoid
+        Cruise IR Distance - N
+         
+       
+          }
+      }
+    }
+   
+  
   
   
 }
+
+
+void proportionalcruise(Drivelength){
+//  Take Ir Values
+    while(IR Values > Threshold) {
+      speed = IR Value
+      drive(speed, speed, 0.2)
+      
+      
+    }
+}
+
 
 
 
@@ -314,6 +334,10 @@ void avoid(){
 }
 
 /******************************************************/
+
+
+/******************************************************/
+
 void approach(){
   int left_ir_value;
   int right_ir_value;
