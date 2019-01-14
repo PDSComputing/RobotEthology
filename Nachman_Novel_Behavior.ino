@@ -91,11 +91,11 @@ void read_analog(){
 /******************************************************/
 void BehaveLikeNachman () { // Does whatever a Nachman can
     const int NumberofSweeps = 5; // Sets how many times the robot goes around the enclosure
-    const int Increment =-5;      // Sets the increment by which each "loop path" is shorter than the last
-    const int modifier = 1;       // Scales the speed derived from IR value to motor (must be set after Empirical Testing)
+    const int Increment =-5;      // Sets the increment by which each "loop path" is shorter than the last (must be set after Empirical Testing)
+    const int modifier = 1;       // Scales the speed derived from IR value to motor (must be set after testing)
     int DistanceThreshold = 100;  // Sets the minimum distance which consitutes being "close" to an object (set after testing)
     for(int a = 0; a < Numberofsweeps; a++) {
-        for(int i = 0; i < 5; i++){
+        for(int i = 0; i < 3; i++){
           ProportionalCruise(DistanceThreshold); // Robot approaches obstacle with its speed proportional to its distance from obstacle
           avoid();                               // after ProportionalCruise terminates, Robot turns to side and restarts loop
         }
