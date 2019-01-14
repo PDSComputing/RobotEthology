@@ -14,22 +14,11 @@ Servo right_servo;  // create servo object to control a servo
 
 //*************************************************** Function Declarations ***********************************************************//
 //Behavior Primitive Functions
-int check_escape_conditions();
-int check_escape_back_conditions();
-int check_seek_light_conditions();
-int check_seek_dark_conditions();
-int check_avoid_conditions();
-int check_approach_conditions();
-void escape();
-void escape_back();
-void seek_light();
-void seek_dark();
 void avoid();
-void approach();
-void straight_cruise();
 void motor_stop();
-//Motor Control Function
-void drive(float left, float right, float delay_seconds);
+void BehaveLikeNachman();
+void ProportionalCruise(DistanceThreshold);
+void drive(float left, float right, float delay_seconds); //Motor Control Function
 
 //*************************************************** Global Constant Declarations ****************************************************//
 const int FRONT_BUMP = 15;
@@ -64,15 +53,7 @@ void setup(){
 /******************************************************/
 void loop() 
 {
-  read_analog();
-  if(check_seek_dark_conditions()){
-seek_dark();
-}
-else if(check_avoid_conditions()){
-avoid();
-}
-else{straight_cruise();}
-
+BehaveLikeNachman();
 }
 /******************************************************/
 void read_analog(){
@@ -91,89 +72,6 @@ void read_analog(){
   //right_photo_value -= photo_offset;
   left_ir_value     /= 10;
   right_ir_value    /= 10;
-}
-/******************************************************/
-int check_escape_conditions(){
-  
-  front_bump_value = analogRead(FRONT_BUMP);
-  Serial.print("front bump: ");Serial.println(front_bump_value);
-  if(front_bump_value >= bump_threshold && front_bump_value <= bump_max){
-    return true;
-  }else{
-    return false;
-  }
-}
-
-/******************************************************/
-int check_escape_back_conditions(){
-  int bump_threshold = 250;
-  int bump_max = 400;
-  
-  int back_bump_value = digitalRead(BACK_BUMP);//analogRead(BACK_BUMP);
-  Serial.print("back bump: ");Serial.println(back_bump_value);
-  if (back_bump_value == HIGH){
-    return true;
-  }/*
-  if(back_bump_value < bump_threshold){
-    return true;
-  }
-  else if(back_bump_value >= bump_threshold && back_bump_value <= bump_max)
-  {
-    return true;
-  }*/else{
-    return false;
-  }
-}
-
-/******************************************************/
-int check_seek_light_conditions(){
- 
-  
-  //printf("left_photo_raw = %d\nright_photo_raw = %d\n", left_photo_raw, right_photo_raw);
-  Serial.print("check_seek_light_conditions().... ");
-  Serial.print(left_photo_value);
-  Serial.print(" : ");
-  Serial.println(right_photo_value);
- 
-  
-  if(left_photo_value > photo_max){
-    left_photo_value = photo_max;
-  }
-  if(right_photo_value > photo_max){
-    right_photo_value = photo_max;
-  }
-  
-  photo_difference  = left_photo_value - right_photo_value;
-
-  //printf("left_photo = %f\nright_photo = %f\n", left_photo_value, right_photo_value);
-  //printf("photo_difference = %f\n", photo_difference);
-  Serial.print("photo_difference: ");
-  Serial.println(photo_difference);
-  if(fabs(photo_difference) > photo_threshold){
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-
-/******************************************************/
-int check_seek_dark_conditions(){
-  int left_photo_value;
-  int right_photo_value;
-  int photo_difference;
-  int photo_threshold = 10;
-  
-  left_photo_value = analogRead(LEFT_PHOTO);
-  right_photo_value = analogRead(RIGHT_PHOTO);
-  photo_difference = left_photo_value - right_photo_value;
-
-  if(abs(photo_difference) > photo_threshold){
-    return true;
-  }
-  else{
-    return false;
-  }
 }
 
 /******************************************************/
@@ -207,120 +105,36 @@ int check_approach_conditions(){
 }
 
 /******************************************************/
-void BehaveLikeNachman () {
-    while(N > 0) {
-      N = N + Increment
-      for(int i = 0; i < 5; i++){
-        Avoid
-        Cruise IR Distance - N
-         
-       
-          }
-      }
-    }
-   
-  
-  
-  
-}
-
-
-void proportionalcruise(Drivelength){
-//  Take Ir Values
-    while(IR Values > Threshold) {
-      speed = IR Value
-      drive(speed, speed, 0.2)
-      
-      
+void BehaveLikeNachman () { //
+    int NumberofSweeps = 5; //
+    int Increment =-5;      //
+    int modifier = 1;       //
+    int N = 100;            //
+    for(int a = 0; a < Numberofsweeps; a++) {
+        for(int i = 0; i < 5; i++){
+          ProportionalCruise(N);
+          avoid();
+        }
+        N = N + Increment;
     }
 }
 
 
 
-
-
-•••••••••••••••••••••••••••••••••••••••••••••
-void escape(){
- 
-  Serial.println("EscapeFrontBump()");
-  //Left is 0 to mid range
-  if(front_bump_value >= bump_threshold && front_bump_value <= bump_max/2){
-    drive(-1, -0.5, 1.00);
-    //printf("drive(-0.25, -0.75, 1.5);\n");
-  }
-  //Right is mid range to max
-  else if(front_bump_value > bump_max/2){
-    drive(-0.5, -1, 1.00);
-    //printf("drive(-0.75, -0.25, 1.5);\n");
-  }
-
-}
-
-/******************************************************/
-void escape_back(){
-  int bump_threshold = 250;
-  int bump_max = 400;
+void ProportionalCruise(DistanceThreshold){
+  left_ir_value = analogRead(LEFT_IR);
+  right_ir_value = analogRead(RIGHT_IR);
+  int center_ir_value = (left_ir_value + right_ir_value) / 2;
   
-  int back_bump_value = digitalRead(BACK_BUMP);//analogRead(BACK_BUMP);
-
-  if (back_bump_value == HIGH){
-    drive(0.25, -0.75, 0.30);
-  }/*
-  if(back_bump_value < bump_threshold){
-    drive(0.25, -0.75, 0.30);
-  }
-  else if(back_bump_value >= bump_threshold && back_bump_value <= bump_max)
-  {
-    drive(-0.75, 0.25, 0.30);
-  }*/
+    while(center_ir_value < DistanceThreshold) {
+      float speed = (1/IR Value) * scale;
+      drive(speed, speed, 0.2);
+      int center_ir_value = (left_ir_value + right_ir_value) / 2;
+      
+      
+    }
 }
 
-/******************************************************/
-void seek_light(){
-  float left_servo;
-  float right_servo;
-  Serial.println("seek_light");
-  /*if(fabs(photo_difference) > photo_threshold){
-    right_servo = photo_difference/photo_max;//(float)(photo_max - right_photo_value)/(float)photo_max;
-    left_servo  = -right_servo;//(float)(photo_max - left_photo_value)/(float)photo_max;
-  }*/
-  if(photo_difference > 0){//Left brighter, turn left
-    left_servo = -0.25;
-    right_servo = 0.25;
-  }else{
-    left_servo = 0.25;
-    right_servo = -0.25;
-  }
-
-  //printf("left_servo = %f, right_servo = %f\n", left_servo, right_servo);
-  drive(left_servo, right_servo, 0.20);
-}
-
-/******************************************************/
-void seek_dark(){
-  int left_photo_value;
-  int right_photo_value;
-  int photo_difference;
-  float photo_ratio;
-  float left_servo;
-  float right_servo;
-  int photo_threshold = 0;
-  
-  left_photo_value  = analogRead(LEFT_PHOTO);
-  right_photo_value = analogRead(RIGHT_PHOTO);
-  printf("left_photo = %d, right_photo = %d\n", left_photo_value, right_photo_value);
-  photo_difference  = left_photo_value - right_photo_value;
-  photo_ratio       = (float)photo_difference/1023.0;
-
-  if(abs(photo_ratio) > photo_threshold){
-    right_servo = right_photo_value/1023.0;
-    left_servo  = left_photo_value/1023.0;
-  }
-
-  printf("left_servo = %f, right_servo = %f\n", left_servo, right_servo);
-  drive(left_servo, right_servo, 0.25);
-  
-}
 
 /******************************************************/
 void avoid(){
@@ -333,37 +147,6 @@ void avoid(){
   }
 }
 
-/******************************************************/
-
-
-/******************************************************/
-
-void approach(){
-  int left_ir_value;
-  int right_ir_value;
-  int approach_threshold = 300;
-  
-  left_ir_value = analogRead(LEFT_IR);
-  right_ir_value = analogRead(RIGHT_IR);
-  
-  printf("left_ir = %d, right_ir = %d\n", left_ir_value, right_ir_value);
-  
-  if(left_ir_value > approach_threshold){
-    drive(0.25, 0.75, 0.5);
-  }
-  
-  else if(right_ir_value > approach_threshold){
-    drive(0.75, 0.25, 0.5);
-  }
-}
-/******************************************************/
-void straight_cruise(){
-  drive(0.50, 0.50, 0.5);
-}
-/******************************************************/
-void arc_cruise(){
-  drive(0.75, 0.5, 0.5);
-}
 /******************************************************/
 void motor_stop(){
   drive(0.0, 0.0, 0.25);
