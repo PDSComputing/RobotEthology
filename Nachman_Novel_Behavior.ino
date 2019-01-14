@@ -94,8 +94,8 @@ void BehaveLikeNachman () { // Does whatever a Nachman can
     const int Increment =-5;      // Sets the increment by which each "loop path" is shorter than the last (must be set after Empirical Testing)
     const int modifier = 1;       // Scales the speed derived from IR value to motor (must be set after testing)
     int DistanceThreshold = 100;  // Sets the minimum distance which consitutes being "close" to an object (set after testing)
-    for(int a = 0; a < Numberofsweeps; a++) {
-        for(int i = 0; i < 3; i++){
+    for(int a = 0; a < Numberofsweeps; a++) { // Does Numbemberofsweeps many "sweeps" or "loops" around the enclosure
+        for(int i = 0; i < 3; i++){           // for each sweep, it make 4 turns
           ProportionalCruise(DistanceThreshold); // Robot approaches obstacle with its speed proportional to its distance from obstacle
           avoid();                               // after ProportionalCruise terminates, Robot turns to side and restarts loop
         }
@@ -106,14 +106,17 @@ void BehaveLikeNachman () { // Does whatever a Nachman can
 
 /******************************************************/
 
-void ProportionalCruise(DistanceThreshold){
-  left_ir_value = analogRead(LEFT_IR);
-  right_ir_value = analogRead(RIGHT_IR);
-  int center_ir_value = (left_ir_value + right_ir_value) / 2;
+void ProportionalCruise(DistanceThreshold){     // drives the robot to approach an obstacle,  DistanceThreshold  representss  distance considered "close
+
+  left_ir_value = analogRead(LEFT_IR);          // Reads IR sensor on left and right sides
+  right_ir_value = analogRead(RIGHT_IR);        
+  int center_ir_value = (left_ir_value + right_ir_value) / 2; // assumes that average between them represents a "middle" IR reading
   
-    while(center_ir_value < DistanceThreshold) {
-      float speed = (1/IR Value) * scale;
-      drive(speed, speed, 0.2);
+    while(center_ir_value < DistanceThreshold) {  // while robot is not close to an obstacle
+      float speed = (1/IR Value) * scale;         // speed is proportional to distance (and therefore inversly poportional to IR reading)
+      drive(speed, speed, 0.2);                   // drive motors at appropriate speed
+      left_ir_value = analogRead(LEFT_IR);        // takes IR readings in order to inform condition of While Loop
+      right_ir_value = analogRead(RIGHT_IR);  
       int center_ir_value = (left_ir_value + right_ir_value) / 2;
       
       
@@ -122,13 +125,13 @@ void ProportionalCruise(DistanceThreshold){
 
 /******************************************************/
 
-void avoid(){
-  if(left_ir_value >= 500){
-    drive(0.75, -0.75, 0.20);
+void avoid(){                                       // avoids nearby obstacles
+  if(left_ir_value >= 500){                         // if object is close to left side
+    drive(0.75, -0.75, 0.20);                       // turn right
   }
-  
-  else if(right_ir_value >= 500){
-    drive(-0.75, 0.5, 0.20);
+    
+  else if(right_ir_value >= 500){                   // if object is close to right side
+    drive(-0.75, 0.5, 0.20);                        // turn left
   }
 }
 
