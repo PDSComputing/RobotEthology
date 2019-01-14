@@ -207,6 +207,19 @@ int check_approach_conditions(){
 }
 
 /******************************************************/
+void BehaveLikeNachman () {
+    for(int i = 0; i < 5; i++){
+      Avoid and cruise w/ speed proportional to distance
+    
+     
+  
+  
+}
+
+
+
+
+•••••••••••••••••••••••••••••••••••••••••••••
 void escape(){
  
   Serial.println("EscapeFrontBump()");
