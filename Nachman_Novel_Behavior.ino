@@ -75,34 +75,18 @@ void read_analog(){
 }
 
 /******************************************************/
-int check_avoid_conditions(){
-  
-  Serial.print("check_avoid_conditions().... ");
-  Serial.print(left_ir_value);
-  Serial.print(" : ");
-  Serial.println(right_ir_value);
-  if(left_ir_value >= 500 || right_ir_value >= 500){
-    return true;
-  }else{
-    return false;
-  }
-}
-
-/******************************************************/
-int check_approach_conditions(){
-  int left_ir_value;
-  int right_ir_value;
-  int approach_threshold = 300;
-  
-  left_ir_value = analogRead(LEFT_IR);
-  right_ir_value = analogRead(RIGHT_IR);
-  
-  if(left_ir_value > approach_threshold || right_ir_value > approach_threshold){
-    return true;
-  }else{
-    return false;
-  }
-}
+//int check_avoid_conditions(){
+//  
+//  Serial.print("check_avoid_conditions().... ");
+//  Serial.print(left_ir_value);
+//  Serial.print(" : ");
+// Serial.println(right_ir_value);
+//  if(left_ir_value >= 500 || right_ir_value >= 500){
+//    return true;
+//  }else{
+//   return false;
+//  }
+//}
 
 /******************************************************/
 void BehaveLikeNachman () { //
@@ -119,7 +103,7 @@ void BehaveLikeNachman () { //
     }
 }
 
-
+/******************************************************/
 
 void ProportionalCruise(DistanceThreshold){
   left_ir_value = analogRead(LEFT_IR);
@@ -135,8 +119,8 @@ void ProportionalCruise(DistanceThreshold){
     }
 }
 
-
 /******************************************************/
+
 void avoid(){
   if(left_ir_value >= 500){
     drive(0.75, -0.75, 0.20);
@@ -148,10 +132,12 @@ void avoid(){
 }
 
 /******************************************************/
+
 void motor_stop(){
   drive(0.0, 0.0, 0.25);
 }
 /******************************************************/
+
 void drive(float left, float right, float delay_seconds){
   
   int left_speed       = SERVO_MID + (SERVO_RANGE * left);
