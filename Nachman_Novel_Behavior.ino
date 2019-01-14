@@ -14,10 +14,10 @@ Servo right_servo;  // create servo object to control a servo
 
 //*************************************************** Function Declarations ***********************************************************//
 //Behavior Primitive Functions
-void avoid();
-void motor_stop();
-void BehaveLikeNachman();
-void ProportionalCruise(DistanceThreshold);
+void avoid();             //takes IR readings and turn 90º to avoid obstacles
+void motor_stop();        //stops motors
+void BehaveLikeNachman(); //"explores" space by -------
+void ProportionalCruise(DistanceThreshold); // drives towards obstacle, where speed is proportional to distance
 void drive(float left, float right, float delay_seconds); //Motor Control Function
 
 //*************************************************** Global Constant Declarations ****************************************************//
@@ -51,9 +51,9 @@ void setup(){
   //digitalWrite(BACK_BUMP, LOW);
 }
 /******************************************************/
-void loop() 
+void loop()   // the robot behaves like Nachman
 {
-BehaveLikeNachman();
+BehaveLikeNachman(); 
 }
 /******************************************************/
 void read_analog(){
@@ -89,18 +89,19 @@ void read_analog(){
 //}
 
 /******************************************************/
-void BehaveLikeNachman () { //
-    int NumberofSweeps = 5; //
-    int Increment =-5;      //
-    int modifier = 1;       //
-    int N = 100;            //
+void BehaveLikeNachman () { // Does whatever a Nachman can
+    const int NumberofSweeps = 5; // Sets how many times the robot goes around the enclosure
+    const int Increment =-5;      // Sets the increment by which each "loop path" is shorter than the last
+    const int modifier = 1;       // Scales the speed derived from IR value to motor (must be set after Empirical Testing)
+    int DistanceThreshold = 100;  // Sets the minimum distance which consitutes being "close" to an object (set after testing)
     for(int a = 0; a < Numberofsweeps; a++) {
         for(int i = 0; i < 5; i++){
-          ProportionalCruise(N);
-          avoid();
+          ProportionalCruise(DistanceThreshold); // Robot approaches obstacle with its speed proportional to its distance from obstacle
+          avoid();                               // after ProportionalCruise terminates, Robot turns to side and restarts loop
         }
-        N = N + Increment;
-    }
+        DistanceThreshold = DistanceThreshold + Increment;  // Set the distance threshold lower each loop, so that the robot's
+                                                            // "loop path" gets tighter until it has covered the entire enclosure
+    }   
 }
 
 /******************************************************/
